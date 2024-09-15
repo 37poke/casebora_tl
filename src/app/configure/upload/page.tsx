@@ -22,7 +22,8 @@ const Page = () => {
   const { startUpload, isUploading } = useUploadThing("imageUploader", {
     onClientUploadComplete: ([data]) => {
       const configId = data.serverData.configId;
-
+      console.log(configId);
+      
       //完成上传，跳转到design页面
       startTransition(() => {
         router.push(`/configure/design?id=${configId}`);
