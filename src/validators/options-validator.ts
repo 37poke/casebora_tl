@@ -12,12 +12,12 @@ export const COLORS = [
 ] as const
 
 
-export const MODEL = {
+export const MODELS = {
     name: "models",
     options: [
         {
             label: "iPhone X",
-            value: "iphonex",
+            value: "iphoneX",
         },
         {
             label: "iPhone 11",
@@ -63,7 +63,7 @@ export const MATERIALS = {
             price: PRODUCTS_PRICES.material.polycarbonate
         }
     ]
-}
+} as const
 
 export const FINISHES = {
     name: "finish",
@@ -81,4 +81,4 @@ export const FINISHES = {
             price: PRODUCTS_PRICES.finish.textured
         }
     ]
-}
+} as const

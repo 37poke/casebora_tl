@@ -4,7 +4,6 @@
 
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import { setPriority } from "os";
 
 const STEPS = [
   {
@@ -35,9 +34,10 @@ const Steps = () => {
       {STEPS.map((step, i) => {
         const isCurrent = pathName.endsWith(step.url);
 
-        const isCompleted = STEPS.slice(i + 1).some((step) => {
-          pathName.endsWith(step.url);
-        });
+        // 修复这里的逻辑问题，确保检查路径是否以对应的步骤 URL 结尾
+        const isCompleted = i < STEPS.findIndex((step) => pathName.endsWith(step.url));
+        console.log(isCompleted);
+        
 
         const imgPath = `/snake-${i + 1}.png`;
 

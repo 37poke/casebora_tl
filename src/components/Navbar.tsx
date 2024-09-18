@@ -3,7 +3,6 @@ import MaxWidthWrapper from './MaxWidthWrapper'
 import { buttonVariants } from './ui/button'
 import { ArrowRight } from 'lucide-react'
 import { getKindeServerSession } from '@kinde-oss/kinde-auth-nextjs/server'
-import {RegisterLink, LoginLink} from "@kinde-oss/kinde-auth-nextjs/components";
 
 const Navbar = async () => {
   const { getUser } = getKindeServerSession()

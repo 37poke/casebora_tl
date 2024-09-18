@@ -1,41 +1,49 @@
 "use client";
 
+// 设计配置组件的Props类型定义
 interface DesignConfiguratorProps {
-  configId: string;
-  imageUrl: string;
-  imageDimensions: { width: number; height: number };
+  configId: string; // 配置ID
+  imageUrl: string; // 用户上传的图片URL
+  imageDimensions: { width: number; height: number }; // 图片的宽高尺寸
 }
+
+// 导入所需的组件和工具函数
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { cn, formatPrice } from "@/lib/utils";
-import Image from "next/image";
-import { Rnd } from "react-rnd";
-import HandleComponents from "@/components/HandleComponents";
-import { ScrollArea } from "@radix-ui/react-scroll-area";
-import { RadioGroup } from "@headlessui/react";
-import { useRef, useState } from "react";
+import { cn, formatPrice } from "@/lib/utils"; // cn用于处理类名，formatPrice用于格式化价格
+import NextImage from "next/image"; // Next.js的图片组件
+import { Rnd } from "react-rnd"; // 可拖拽和调整大小的组件
+import HandleComponents from "@/components/HandleComponents"; // 自定义句柄组件
+import { ScrollArea } from "@radix-ui/react-scroll-area"; // 可滚动区域组件
+import { RadioGroup } from "@headlessui/react"; // 单选框组组件
+import { useRef, useState } from "react"; // React中的Ref和State Hook
 import {
   COLORS,
   FINISHES,
   MATERIALS,
-  MODEL,
-} from "@/validators/options-validator";
+  MODELS,
+} from "@/validators/options-validator"; // 可选配置的验证器
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { Label } from "@radix-ui/react-label";
-import { ArrowRight, Check, ChevronDown } from "lucide-react";
-import { BASE_PRICE } from "@/config/products";
-import { resolve } from "path";
+} from "@radix-ui/react-dropdown-menu"; // 下拉菜单组件
+import { Button } from "@/components/ui/button"; // 按钮组件
+import { Label } from "@radix-ui/react-label"; // 标签组件
+import { ArrowRight, Check, ChevronDown } from "lucide-react"; // 图标
+import { BASE_PRICE } from "@/config/products"; // 产品的基本价格
+import { useUploadThing } from "@/lib/uploadthing"; // 文件上传工具
+import { useToast } from "@/hooks/use-toast"; // Toast消息提示工具
+import { useMutation } from "@tanstack/react-query";
+import { SaveConfigArgs, saveConfig as _saveConfig } from "./action";
+import { useRouter } from "next/navigation";
 
 export default function DesignConfigurator({
   configId,
   imageDimensions,
   imageUrl,
 }: DesignConfiguratorProps) {
+  // 配置选项的状态，包括颜色、型号、材料和表面处理
   const [options, setOptions] = useState<{
     color: (typeof COLORS)[number];
     model: (typeof MODEL.options)[number];
@@ -43,26 +51,53 @@ export default function DesignConfigurator({
     finish: (typeof FINISHES.options)[number];
   }>({
     color: COLORS[0],
-    model: MODEL.options[0],
+    model: MODELS.options[0],
     material: MATERIALS.options[0],
     finish: FINISHES.options[0],
   });
 
+  const router = useRouter()
+  // Toast提示
+  const { toast } = useToast();
+
+  const {mutate: saveConfig} = useMutation({
+    mutationKey: ["save-config"],
+    mutationFn: async (args: SaveConfigArgs) => {
+      await Promise.all([saveConfiguration(), _saveConfig(args)])
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong",
+        description: "There was an error on our end. Please try again.",
+        variant: "destructive"
+      })
+    },
+    onSuccess: () => {
+      router.push(`/configure/preview?id=${configId}`)
+    },
+  })
+
+
+  // 渲染图片的尺寸
   const [renderedDimension, setRenderedDimension] = useState({
     width: imageDimensions.width / 4,
     height: imageDimensions.height / 4,
   });
 
+  // 渲染图片的位置
   const [renderedPosition, setRenderedPosition] = useState({ x: 150, y: 205 });
 
-  //创建phoneRef和containerRef
+  // 创建phoneRef和containerRef，用于引用DOM元素
   const phoneRef = useRef<HTMLDivElement>(null);
-
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // 调用上传函数
+  const { startUpload } = useUploadThing("imageUploader");
+
+  // 保存配置函数
   async function saveConfiguration() {
     try {
-      //计算重叠部分
+      // 计算用户图片与手机模板的重叠部分
       if (!phoneRef.current) return;
       const {
         left: caseLeft,
@@ -77,22 +112,25 @@ export default function DesignConfigurator({
       const leftOffset = caseLeft - containerLeft;
       const topOffset = caseTop - containerTop;
 
+      // 实际渲染的X和Y坐标
       const actualX = renderedPosition.x - leftOffset;
       const actualY = renderedPosition.y - topOffset;
 
+      // 创建Canvas来绘制最终图片
       const canvas = document.createElement("canvas");
-
       canvas.width = width;
       canvas.height = height;
 
       const ctx = canvas.getContext("2d");
 
+      // 创建一个新的图片对象并加载用户图片
       const userImage = new Image();
-      userImage.crossOrigin = "anonymous";
+      userImage.crossOrigin = "anonymous"; // 允许跨域加载图片
       userImage.src = imageUrl;
-      //图片加载完成
+      // 等待图片加载完成
       await new Promise((resolve) => (userImage.onload = resolve));
 
+      // 将用户图片绘制到Canvas上
       ctx?.drawImage(
         userImage,
         actualX,
@@ -101,12 +139,39 @@ export default function DesignConfigurator({
         renderedDimension.height
       );
 
-      //转换元素
+      // 将Canvas转成Base64格式
       const base64 = canvas.toDataURL();
       console.log(base64);
 
-      const base64Data = base64.split(0, 1);
-    } catch (error) {}
+      const base64Data = base64.split(",")[1];
+
+      // 将Base64数据转换成Blob
+      const blob = base64ToBlob(base64Data, "image/png");
+
+      // 将Blob转换成文件
+      const file = new File([blob], "filename.png", { type: "image/png" });
+
+      // 上传文件
+      await startUpload([file], { configId });
+    } catch (error) {
+      // 弹出错误提示
+      toast({
+        title: "操作失败",
+        description: "保存配置时出现问题，请重试。",
+        variant: "destructive",
+      });
+    }
+  }
+
+  // 将Base64字符串转换成Blob
+  function base64ToBlob(base64: string, mimeType: string) {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
   }
 
   return (
@@ -128,7 +193,7 @@ export default function DesignConfigurator({
             ratio={896 / 1831}
             className="pointer-events-none relative z-50 aspect-[896/1831] "
           >
-            <Image
+            <NextImage
               alt="phone image"
               src="/phone-template.png"
               className="pointer-events-none z-50 select-none"
@@ -178,7 +243,7 @@ export default function DesignConfigurator({
           }}
         >
           <div className="relative w-full h-full">
-            <Image
+            <NextImage
               src={imageUrl}
               fill
               alt="your image"
@@ -259,7 +324,7 @@ export default function DesignConfigurator({
                     </DropdownMenuTrigger>
 
                     <DropdownMenuContent>
-                      {MODEL.options.map((model) => (
+                      {MODELS.options.map((model) => (
                         <DropdownMenuItem
                           key={model.label}
                           className={cn(
@@ -371,7 +436,13 @@ export default function DesignConfigurator({
               <Button
                 size="sm"
                 className="w-full"
-                onClick={() => saveConfiguration()}
+                onClick={() => saveConfig({
+                  configId,
+                  color: options.color.value,
+                  finish: options.finish.value,
+                  material: options.material.value,
+                  model: options.model.value
+                })}
               >
                 Continue{" "}
                 <ArrowRight className="h-4 w-4 ml-1.5 inline"></ArrowRight>

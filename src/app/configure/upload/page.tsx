@@ -31,9 +31,13 @@ const Page = () => {
     },
 
     onUploadProgress(p) {
+      console.log(p);
+      
       setUploadProgress(p);
     },
   });
+  console.log(uploadProgress);
+  
 
   //接受拖动的文件
   const onDropAccepted = (acceptedFiles: File[]) => {
