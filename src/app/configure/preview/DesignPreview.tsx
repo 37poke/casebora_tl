@@ -9,9 +9,22 @@ import { ArrowRight, Check, Divide } from "lucide-react";
 import { useEffect, useState } from "react";
 import Confetti from "react-dom-confetti";
 import { useMutation } from "@tanstack/react-query";
+import { createCheckoutSession } from "./action";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import LoginModel from "@/components/LoginModel";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs"
 
 const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
-  const [showConfetti, setShowConfetti] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+  const { id } = configuration;
+  const { user } = useKindeBrowserClient()
+
+  //是否打开登录对话框
+  const [isOpenLoginModel, setIsOpenLoginModel] = useState<boolean>(false)
+
+  const [showConfetti, setShowConfetti] = useState<boolean>(false);
   useEffect(() => {
     setShowConfetti(true);
   });
@@ -26,17 +39,39 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
     ({ value }) => value === model
   )!;
 
-
   //计算总价
-  let totalPrice = BASE_PRICE
-  if (material === "polycarbonate") totalPrice += PRODUCTS_PRICES.material.polycarbonate
-  if (finish === "smooth") totalPrice += PRODUCTS_PRICES.finish.smooth
+  let totalPrice = BASE_PRICE;
+  if (material === "polycarbonate")
+    totalPrice += PRODUCTS_PRICES.material.polycarbonate;
+  if (finish === "smooth") totalPrice += PRODUCTS_PRICES.finish.smooth;
 
-  // const {} = useMutation({
-  //   mutationKey: ["get-check-session"],
-  //   mutationFn: 
-  // })
+  const { mutate: createPaymentSession } = useMutation({
+    mutationKey: ["get-check-session"],
+    mutationFn: createCheckoutSession,
+    onSuccess: ({ url }) => {
+      if (url) router.push(url);
+      else throw new Error("unable to retrieve payment URL.");
+    },
+    onError: () => {
+      toast({
+        title: "Something went wrong",
+        description: "There was an error on our end. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
+
+   const handleCheckout = () => {
+    if (user) {
+      //create payment session
+      createPaymentSession({ configId: configuration.id })
+    } else {
+      //需要去登录
+      sessionStorage.setItem("configurationId", id)
+      setIsOpenLoginModel(true)
+    }
+   }
   return (
     <>
       <div
@@ -50,6 +85,7 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
         />
       </div>
 
+        <LoginModel isOpen={isOpenLoginModel} setIsOpen={setIsOpenLoginModel}/>
       <div
         className="mt-20 grid grid-cols-1 text-sm sm:grid-cols-12
       sm:grid-rows-1 sm:gap-x-6 md:gap-x-8 lg:gap-x-12"
@@ -123,19 +159,27 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
                   </div>
                 ) : null}
 
-                <div className="my-2 h-px bg-gray-200"/>
+                <div className="my-2 h-px bg-gray-200" />
 
                 <div className="flex items-center justify-between by-2">
-                    <p className="font-semibold text-gray-900">Order total</p>
-                    <p className="font-semibold text-gray-900">
-                        {formatPrice(totalPrice / 100)}
-                    </p>
+                  <p className="font-semibold text-gray-900">Order total</p>
+                  <p className="font-semibold text-gray-900">
+                    {formatPrice(totalPrice / 100)}
+                  </p>
                 </div>
               </div>
             </div>
 
             <div className="mt-8 flex justify-end pb-12">
-                <Button className="px-4 sm:px-6 lg:px-8"> Check out <ArrowRight className="h-4 w-4 ml-1.5 inline"/></Button>
+              <Button
+                className="px-4 sm:px-6 lg:px-8"
+                onClick={() =>
+                  handleCheckout()
+                }
+              >
+                {" "}
+                Check out <ArrowRight className="h-4 w-4 ml-1.5 inline" />
+              </Button>
             </div>
           </div>
         </div>
