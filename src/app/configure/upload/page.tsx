@@ -98,6 +98,7 @@ const Page = () => {
                       h-6 w-6 text-zinc-500 mb-2"
                 />
               ) : (
+                // eslint-disable-next-line jsx-a11y/alt-text
                 <Image className="h-6 w-6 text-zinc-500 mb-2" />
               )}
               <div

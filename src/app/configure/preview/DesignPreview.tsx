@@ -28,7 +28,7 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   useEffect(() => {
     setShowConfetti(true);
-  });
+  },[]);
 
   const { color, model, finish, material } = configuration;
 
