@@ -46,7 +46,7 @@ export default function DesignConfigurator({
   // 配置选项的状态，包括颜色、型号、材料和表面处理
   const [options, setOptions] = useState<{
     color: (typeof COLORS)[number];
-    model: (typeof MODEL.options)[number];
+    model: (typeof MODELS.options)[number];
     material: (typeof MATERIALS.options)[number];
     finish: (typeof FINISHES.options)[number];
   }>({

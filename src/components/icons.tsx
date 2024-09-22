@@ -1,4 +1,4 @@
-import { LucideProps, View } from "lucide-react";
+import { LucideProps } from "lucide-react";
 
 export const Icons = {
   underline: (props: LucideProps) => (

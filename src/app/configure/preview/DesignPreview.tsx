@@ -2,10 +2,10 @@
 import Phone from "@/components/Phone";
 import { BASE_PRICE, PRODUCTS_PRICES } from "@/config/products";
 import { cn, formatPrice } from "@/lib/utils";
-import { COLORS, FINISHES, MODELS } from "@/validators/options-validator";
+import { COLORS, MODELS } from "@/validators/options-validator";
 import { Button } from "@/components/ui/button";
 import { Configuration } from "@prisma/client";
-import { ArrowRight, Check, Divide } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import Confetti from "react-dom-confetti";
 import { useMutation } from "@tanstack/react-query";
@@ -20,7 +20,8 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
   const { toast } = useToast();
   const { id } = configuration;
   const { user } = useKindeBrowserClient()
-
+  
+  
   //是否打开登录对话框
   const [isOpenLoginModel, setIsOpenLoginModel] = useState<boolean>(false)
 
@@ -68,7 +69,7 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
       createPaymentSession({ configId: configuration.id })
     } else {
       //需要去登录
-      sessionStorage.setItem("configurationId", id)
+      localStorage.setItem("configurationId", id)
       setIsOpenLoginModel(true)
     }
    }
