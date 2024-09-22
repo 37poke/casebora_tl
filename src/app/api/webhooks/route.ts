@@ -37,7 +37,8 @@ export async function POST(req: Request) {
 
       const billingAddress = session.customer_details!.address;
       const shippingAddress = session.customer_details!.address;
-
+      console.log(billingAddress, shippingAddress);
+      
       //更新数据库
       await db.order.update({
         where: {
