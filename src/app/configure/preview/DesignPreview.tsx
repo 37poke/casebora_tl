@@ -13,22 +13,21 @@ import { createCheckoutSession } from "./action";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import LoginModel from "@/components/LoginModel";
-import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs"
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
   const router = useRouter();
   const { toast } = useToast();
   const { id } = configuration;
-  const { user } = useKindeBrowserClient()
-  
-  
+  const { user } = useKindeBrowserClient();
+
   //是否打开登录对话框
-  const [isOpenLoginModel, setIsOpenLoginModel] = useState<boolean>(false)
+  const [isOpenLoginModel, setIsOpenLoginModel] = useState<boolean>(false);
 
   const [showConfetti, setShowConfetti] = useState<boolean>(false);
   useEffect(() => {
     setShowConfetti(true);
-  },[]);
+  }, []);
 
   const { color, model, finish, material } = configuration;
 
@@ -46,7 +45,7 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
     totalPrice += PRODUCTS_PRICES.material.polycarbonate;
   if (finish === "smooth") totalPrice += PRODUCTS_PRICES.finish.smooth;
 
-  const { mutate: createPaymentSession } = useMutation({
+  const { mutate: createPaymentSession, isPending } = useMutation({
     mutationKey: ["get-check-session"],
     mutationFn: createCheckoutSession,
     onSuccess: ({ url }) => {
@@ -62,17 +61,16 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
     },
   });
 
-
-   const handleCheckout = () => {
+  const handleCheckout = () => {
     if (user) {
       //create payment session
-      createPaymentSession({ configId: configuration.id })
+      createPaymentSession({ configId: configuration.id });
     } else {
       //需要去登录
-      localStorage.setItem("configurationId", id)
-      setIsOpenLoginModel(true)
+      localStorage.setItem("configurationId", id);
+      setIsOpenLoginModel(true);
     }
-   }
+  };
   return (
     <>
       <div
@@ -86,15 +84,15 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
         />
       </div>
 
-        <LoginModel isOpen={isOpenLoginModel} setIsOpen={setIsOpenLoginModel}/>
+      <LoginModel isOpen={isOpenLoginModel} setIsOpen={setIsOpenLoginModel} />
       <div
-        className="mt-20 grid grid-cols-1 text-sm sm:grid-cols-12
+        className="mt-20 flex flex-col items-center md:grid grid-cols-1 text-sm sm:grid-cols-12
       sm:grid-rows-1 sm:gap-x-6 md:gap-x-8 lg:gap-x-12"
       >
-        <div className="sm:col-span-4 md:col-span-3 md:row-span-2 md:row-end-2">
+        <div className="sm:col-span-4 lg:col-span-3 md:col-span-3 md:row-span-2 md:row-end-2">
           <Phone
             imgSrc={configuration.croppedImageUrl!}
-            className={cn(`bg-${tw}`)}
+            className={cn(`bg-${tw}`, "max-w-[150px] md:max-w-full")}
           />
         </div>
 
@@ -174,9 +172,10 @@ const DesignPreview = ({ configuration }: { configuration: Configuration }) => {
             <div className="mt-8 flex justify-end pb-12">
               <Button
                 className="px-4 sm:px-6 lg:px-8"
-                onClick={() =>
-                  handleCheckout()
-                }
+                isLoading={isPending}
+                disabled={isPending}
+                loadingText="Saving"
+                onClick={() => handleCheckout()}
               >
                 {" "}
                 Check out <ArrowRight className="h-4 w-4 ml-1.5 inline" />

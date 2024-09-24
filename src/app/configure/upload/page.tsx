@@ -2,14 +2,12 @@
 
 import { useUploadThing } from "@/lib/uploadthing";
 import { useToast } from "@/hooks/use-toast";
-
 import { cn } from "@/lib/utils";
-import { Progress } from "@radix-ui/react-progress";
 import { Image, Loader2, MousePointerSquareDashed } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import Dropzone, { FileRejection } from "react-dropzone";
-
+import { Progress } from "@/components/ui/progress"
 const Page = () => {
   const { toast } = useToast();
 

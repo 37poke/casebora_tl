@@ -28,12 +28,16 @@ const PhonePreview = ({
   };
 
   useEffect(() => {
-    handleResize();
-
+    handleResize(); // 初始化时计算一次
+  
+    // 添加事件监听器
     window.addEventListener("resize", handleResize);
-    //卸载组件
-    return () => window.addEventListener("resize", handleResize);
-  }, [ref.current]);
+  
+    // 卸载组件时，移除事件监听器
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []); // 依赖项为空，表示只在组件挂载和卸载时执行
 
   let caseBackgroundColor = "bg-zinc-950";
   if (color === "blue") caseBackgroundColor = "bg-blue-950";
@@ -41,7 +45,7 @@ const PhonePreview = ({
   return (
     <AspectRatio ref={ref} ratio={3000 / 2001} className="relative">
       <div
-        className="absolute z-20 scale-[1.0352"
+        className="absolute z-20 scale-[1.0352]"
         style={{
           left:
             renderedDimensions.width / 2 -
@@ -63,7 +67,7 @@ const PhonePreview = ({
         <img
           alt="phone"
           src="/clearphone.png"
-          className="pointer-events-none h-full antialiased
+          className="pointer-events-none h-full antialiased w-full
         rounded-md"
         />
       </div>

@@ -13,7 +13,7 @@ import { cn, formatPrice } from "@/lib/utils"; // cn用于处理类名，formatP
 import NextImage from "next/image"; // Next.js的图片组件
 import { Rnd } from "react-rnd"; // 可拖拽和调整大小的组件
 import HandleComponents from "@/components/HandleComponents"; // 自定义句柄组件
-import { ScrollArea } from "@radix-ui/react-scroll-area"; // 可滚动区域组件
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { RadioGroup } from "@headlessui/react"; // 单选框组组件
 import { useRef, useState } from "react"; // React中的Ref和State Hook
 import {
@@ -27,7 +27,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu"; // 下拉菜单组件
+} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"; // 按钮组件
 import { Label } from "@radix-ui/react-label"; // 标签组件
 import { ArrowRight, Check, ChevronDown } from "lucide-react"; // 图标
@@ -56,27 +56,26 @@ export default function DesignConfigurator({
     finish: FINISHES.options[0],
   });
 
-  const router = useRouter()
+  const router = useRouter();
   // Toast提示
   const { toast } = useToast();
 
-  const {mutate: saveConfig} = useMutation({
+  const { mutate: saveConfig, isPending } = useMutation({
     mutationKey: ["save-config"],
     mutationFn: async (args: SaveConfigArgs) => {
-      await Promise.all([saveConfiguration(), _saveConfig(args)])
+      await Promise.all([saveConfiguration(), _saveConfig(args)]);
     },
     onError: () => {
       toast({
         title: "Something went wrong",
         description: "There was an error on our end. Please try again.",
-        variant: "destructive"
-      })
+        variant: "destructive",
+      });
     },
     onSuccess: () => {
-      router.push(`/configure/preview?id=${configId}`)
+      router.push(`/configure/preview?id=${configId}`);
     },
-  })
-
+  });
 
   // 渲染图片的尺寸
   const [renderedDimension, setRenderedDimension] = useState({
@@ -252,7 +251,11 @@ export default function DesignConfigurator({
           </div>
         </Rnd>
       </div>
+
+
       {/**选择区域 */}
+
+
       <div className="h-[37.5rem] w-full col-span-full lg:col-span-1 flex flex-col bg-white">
         <ScrollArea className="relative flex-1 overflow-auto">
           <div
@@ -267,6 +270,8 @@ export default function DesignConfigurator({
             </h2>
 
             <div className="w-full h-px bg-zinc-200 my-6" />
+
+
             {/**选择颜色 */}
             <div
               className="relative mt-4 h-full flex flex-col
@@ -305,7 +310,9 @@ export default function DesignConfigurator({
                     ))}
                   </div>
                 </RadioGroup>
-                {/**选择模式 */}
+
+
+                {/**选择手机模式 */}
                 <div
                   className="relative flex flex-col gap-3
               w-full"
@@ -323,12 +330,12 @@ export default function DesignConfigurator({
                       </Button>
                     </DropdownMenuTrigger>
 
-                    <DropdownMenuContent>
+                    <DropdownMenuContent  >
                       {MODELS.options.map((model) => (
                         <DropdownMenuItem
                           key={model.label}
                           className={cn(
-                            "flex text-sm gap-1 items-center p-1.5 cursor-default hover:bg-zinc-100",
+                            "flex text-sm gap-1 items-center p-1.5 cursor-default hover:bg-zinc-100 ",
                             {
                               "bg-zinc-100":
                                 model.label === options.model.label,
@@ -353,6 +360,7 @@ export default function DesignConfigurator({
                   </DropdownMenu>
                 </div>
 
+                {/**选择手机科材质区域 */}
                 {[MATERIALS, FINISHES].map(
                   ({ name, options: selectableOptions }) => (
                     <RadioGroup
@@ -436,13 +444,18 @@ export default function DesignConfigurator({
               <Button
                 size="sm"
                 className="w-full"
-                onClick={() => saveConfig({
-                  configId,
-                  color: options.color.value,
-                  finish: options.finish.value,
-                  material: options.material.value,
-                  model: options.model.value
-                })}
+                isLoading={isPending}
+                disabled={isPending}
+                loadingText="Saving"
+                onClick={() =>
+                  saveConfig({
+                    configId,
+                    color: options.color.value,
+                    finish: options.finish.value,
+                    material: options.material.value,
+                    model: options.model.value,
+                  })
+                }
               >
                 Continue{" "}
                 <ArrowRight className="h-4 w-4 ml-1.5 inline"></ArrowRight>
